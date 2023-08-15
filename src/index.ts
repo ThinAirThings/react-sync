@@ -1,2 +1,2 @@
-export * from './hooks/useCallbackResult'
+export * from './hooks/useCallbackResult.js'
 
