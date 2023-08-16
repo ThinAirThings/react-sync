@@ -25,19 +25,19 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCal
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.()
-                triggerValueRef.current = 'triggered'
+                // triggerValueRef.current = 'triggered'
                 setTrigger(() => ({
                     type: 'success',
                     value: 'triggered'
                 }))
             } else if (triggerState === 'done') {
-                triggerValueRef.current = 'done'
+                // triggerValueRef.current = 'done'
                 setTrigger(() => ({
                     type: 'pending',
                 }))
             }
         },
-        triggerValueRef.current
+        // triggerValueRef.current
     ] as const
 }
 

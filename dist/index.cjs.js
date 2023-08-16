@@ -10,27 +10,27 @@ const useTrigger = (initialTriggerState, cleanupCallback) => {
             value: 'triggered'
         }
         : { type: 'pending' });
-    const triggerValueRef = React.useRef(initialTriggerState);
+    React.useRef(initialTriggerState);
     return [
         trigger,
         async (triggerState) => {
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.();
-                triggerValueRef.current = 'triggered';
+                // triggerValueRef.current = 'triggered'
                 setTrigger(() => ({
                     type: 'success',
                     value: 'triggered'
                 }));
             }
             else if (triggerState === 'done') {
-                triggerValueRef.current = 'done';
+                // triggerValueRef.current = 'done'
                 setTrigger(() => ({
                     type: 'pending',
                 }));
             }
         },
-        triggerValueRef.current
+        // triggerValueRef.current
     ];
 };
 const useCallbackResult = (callback, dependencies, resultHandlers) => {
