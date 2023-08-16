@@ -18,5 +18,5 @@ export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback
         errorLog: Array<Error>;
     }) => void;
     success?: (value: T) => void;
-    cleanup?: () => Promise<void> | void;
+    cleanup?: (value: T) => Promise<void> | void;
 }) => readonly [Result<T>, (triggerState: 'triggered' | 'done') => Promise<void>];

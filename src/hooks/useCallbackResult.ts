@@ -37,7 +37,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
             errorLog: Array<Error>
         }) => void
         success?: (value: T) => void
-        cleanup?: () => Promise<void>|void
+        cleanup?: (value: T) => Promise<void>|void
     }, 
 ) => {
     // Set result state
