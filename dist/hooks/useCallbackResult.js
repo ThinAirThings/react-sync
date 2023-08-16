@@ -34,7 +34,7 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean))
             return;
-        resultHandlers?.[result.type]?.(result, result.type === 'failure' ? failureRetryCountRef.current : undefined);
+        resultHandlers?.[result.type]?.(result, failureRetryCountRef.current);
     }, [result, ...dependencies]);
     return result;
 };

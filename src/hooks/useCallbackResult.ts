@@ -14,7 +14,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     resultHandlers?: {
         pending?: () => void,
         success?: (value: T) => void,
-        failure?: (error: Error, retryCount?:number) => void
+        failure?: (error: Error, retryCount:number) => void
     }, 
 ) => {
     // Set result state
@@ -47,7 +47,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the result handlers
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean)) return 
-        resultHandlers?.[result.type]?.(result as any, result.type === 'failure' ? failureRetryCountRef.current : undefined)
+        resultHandlers?.[result.type]?.(result as any, failureRetryCountRef.current)
     }, [result, ...dependencies])
     return result
 }
