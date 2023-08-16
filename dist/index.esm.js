@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, createContext, useContext, Fragment } from 'react';
+import React, { useRef, useEffect, useState, createContext, useContext, Fragment } from 'react';
 import { useImmer } from 'use-immer';
 
 const useTrigger = (cleanupCallback) => {
@@ -69,7 +69,7 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 }));
             }
         })();
-    }, [result, ...dependencies]); // Add result here
+    }, [trigger, result, ...dependencies]); // Add result here
     // Run the result handlers
     useEffect(() => {
         if (!dependencies
@@ -151,4 +151,4 @@ const useDependencyResolver = ({ callback, cleanup }) => {
     }, [dependencyResolved, cleaningUp]);
 };
 
-export { DependencyLayer, useCallbackResult, useDependencyResolver, useDependencyResolverContext, useTrigger, useUpdateParentDependencyFromChildMap };
+export { DependencyLayer, useCallbackResult, useDependencyResolver, useDependencyResolverContext, useUpdateParentDependencyFromChildMap };

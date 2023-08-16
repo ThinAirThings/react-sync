@@ -7,7 +7,6 @@ export type Result<T> = {
     type: 'failure';
     error: Error;
 };
-export declare const useTrigger: (cleanupCallback?: () => Promise<void>) => readonly ["triggered" | "done", (triggerState: 'triggered' | 'done') => Promise<void>];
 export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, lifecycleHandlers?: {
     pending?: (failureLog: {
         retryCount: number;

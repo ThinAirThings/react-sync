@@ -71,7 +71,7 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 }));
             }
         })();
-    }, [result, ...dependencies]); // Add result here
+    }, [trigger, result, ...dependencies]); // Add result here
     // Run the result handlers
     React.useEffect(() => {
         if (!dependencies
@@ -157,5 +157,4 @@ exports.DependencyLayer = DependencyLayer;
 exports.useCallbackResult = useCallbackResult;
 exports.useDependencyResolver = useDependencyResolver;
 exports.useDependencyResolverContext = useDependencyResolverContext;
-exports.useTrigger = useTrigger;
 exports.useUpdateParentDependencyFromChildMap = useUpdateParentDependencyFromChildMap;

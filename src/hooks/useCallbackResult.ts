@@ -7,7 +7,7 @@ export type Result<T> =
     | {type: 'success', value: T}
     | {type: 'failure', error: Error}
 
-export const useTrigger = (cleanupCallback?: () => Promise<void>) => {
+const useTrigger = (cleanupCallback?: () => Promise<void>) => {
     const [trigger, setTrigger] = useState<'triggered' | 'done'>('triggered')
     return [
         trigger,
@@ -91,7 +91,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 }))
             }
         })()
-    }, [result, ...dependencies])   // Add result here
+    }, [trigger, result, ...dependencies])   // Add result here
     // Run the result handlers
     useEffect(() => {
         if (!dependencies
