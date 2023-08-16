@@ -11,6 +11,7 @@ export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback
     pending?: (() => void) | undefined;
     success?: ((value: T) => void) | undefined;
     failure?: ((error: Error, failureLog: {
+        runRetry: (newCallback?: ((depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) | undefined) => void;
         retryCount: number;
         errorLog: Array<Error>;
     }) => void) | undefined;

@@ -8,6 +8,7 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Set the retry count ref
     const failureRetryCountRef = useRef(0);
     const failureErrorLogRef = useRef([]);
+    const failureRetryCallbackRef = useRef(null);
     // Run the callback
     useEffect(() => {
         (async () => {
@@ -17,7 +18,9 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
             failureErrorLogRef.current.length = 0;
             const depValues = dependencies.map(dep => dep.value);
             try {
-                const success = await callback(depValues);
+                const success = failureRetryCallbackRef.current
+                    ? await failureRetryCallbackRef.current(depValues)
+                    : await callback(depValues);
                 setResult(() => ({
                     type: 'success',
                     value: success
@@ -40,7 +43,20 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
         if (result.type === 'failure') {
             failureRetryCountRef.current++;
             failureErrorLogRef.current.push(result.error);
-            resultHandlers?.failure?.(result.error, { errorLog: failureErrorLogRef.current, retryCount: failureRetryCountRef.current });
+            const runRetry = (newCallback) => {
+                if (newCallback)
+                    failureRetryCallbackRef.current = newCallback;
+                else
+                    failureRetryCallbackRef.current = null;
+                setResult(() => ({
+                    type: 'pending'
+                }));
+            };
+            resultHandlers?.failure?.(result.error, {
+                runRetry,
+                errorLog: failureErrorLogRef.current,
+                retryCount: failureRetryCountRef.current
+            });
             return;
         }
         resultHandlers?.[result.type]?.(result);
