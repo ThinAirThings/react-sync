@@ -52,7 +52,14 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the result handlers
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean)) return 
-        resultHandlers?.[result.type]?.(result as any, {errorLog: failureErrorLogRef.current, retryCount: failureRetryCountRef.current})
+        // Handle Errors
+        if (result.type === 'failure') {
+            failureRetryCountRef.current++
+            failureErrorLogRef.current.push(result.error)
+            resultHandlers?.failure?.(result.error, {errorLog: failureErrorLogRef.current, retryCount: failureRetryCountRef.current})
+            return
+        }
+        resultHandlers?.[result.type]?.(result as any)
     }, [result, ...dependencies])
     return result
 }
