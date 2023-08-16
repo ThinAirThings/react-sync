@@ -12,8 +12,13 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the callback
     useEffect(() => {
         (async () => {
-            if ((!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean))
-                || (result.type !== 'pending'))
+            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
+                setResult(() => ({
+                    type: 'pending'
+                }));
+                return;
+            }
+            if (result.type !== 'pending')
                 return;
             const depValues = dependencies.map(dep => dep.value);
             try {

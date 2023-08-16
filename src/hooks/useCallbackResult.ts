@@ -35,10 +35,13 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (
-                (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean))
-                || (result.type !== 'pending')
-            ) return
+            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
+                setResult(() => ({
+                    type: 'pending'
+                }))
+                return
+            }
+            if (result.type !== 'pending') return
             const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
             try {
                 const success = failureRetryCallbackRef.current 
