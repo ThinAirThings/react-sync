@@ -100,7 +100,11 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     }, [result, ...dependencies])   // Add result here
     // Run the result handlers
     useEffect(() => {
-        if (!dependencies.map(result => result.type === 'success').every(Boolean)) return 
+        if (!dependencies
+            .filter(dep => dep.type !== "trigger")
+            .map(dependencyResult => dependencyResult.type === 'success')
+            .every(Boolean)
+        ) return 
         // Handle Errors
         if (result.type === 'failure') {
             failureRetryCountRef.current++

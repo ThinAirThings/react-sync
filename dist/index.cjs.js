@@ -77,7 +77,10 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     }, [result, ...dependencies]); // Add result here
     // Run the result handlers
     React.useEffect(() => {
-        if (!dependencies.map(result => result.type === 'success').every(Boolean))
+        if (!dependencies
+            .filter(dep => dep.type !== "trigger")
+            .map(dependencyResult => dependencyResult.type === 'success')
+            .every(Boolean))
             return;
         // Handle Errors
         if (result.type === 'failure') {
