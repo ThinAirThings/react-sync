@@ -8,32 +8,36 @@ export type Result<T> =
     | {type: 'failure', error: Error}
 
 
-export type Trigger = Result<boolean>
+export type Trigger = Result<'triggered'|'done'>
 export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCallback?: () => Promise<void>) => {
     const [trigger, setTrigger] = useState<Trigger>(
         initialTriggerState === 'triggered' 
         ? {
             type: 'success',
-            value: true
+            value: 'triggered'
         } 
         : { type: 'pending'}
     )
+    const triggerValueRef = useRef(initialTriggerState)
     return [
         trigger,
         async (triggerState: 'triggered' | 'done') => {
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.()
+                triggerValueRef.current = 'triggered'
                 setTrigger(() => ({
                     type: 'success',
-                    value: true
+                    value: 'triggered'
                 }))
             } else if (triggerState === 'done') {
+                triggerValueRef.current = 'done'
                 setTrigger(() => ({
                     type: 'pending',
                 }))
             }
-        }
+        },
+        triggerValueRef.current
     ] as const
 }
 
