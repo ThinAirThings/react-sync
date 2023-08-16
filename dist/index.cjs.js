@@ -3,7 +3,7 @@
 var React = require('react');
 var useImmer = require('use-immer');
 
-const useTrigger = (initialTriggerState) => {
+const useTrigger = (initialTriggerState, cleanupCallback) => {
     const [trigger, setTrigger] = React.useState(initialTriggerState === 'triggered'
         ? {
             type: 'success',
@@ -12,8 +12,10 @@ const useTrigger = (initialTriggerState) => {
         : { type: 'pending' });
     return [
         trigger,
-        (triggerState) => {
+        async (triggerState) => {
             if (triggerState === 'triggered') {
+                // Run cleanup
+                await cleanupCallback?.();
                 setTrigger(() => ({
                     type: 'success',
                     value: true

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, createContext, useContext, Fragment } from 'react';
 import { useImmer } from 'use-immer';
 
-const useTrigger = (initialTriggerState) => {
+const useTrigger = (initialTriggerState, cleanupCallback) => {
     const [trigger, setTrigger] = useState(initialTriggerState === 'triggered'
         ? {
             type: 'success',
@@ -10,8 +10,10 @@ const useTrigger = (initialTriggerState) => {
         : { type: 'pending' });
     return [
         trigger,
-        (triggerState) => {
+        async (triggerState) => {
             if (triggerState === 'triggered') {
+                // Run cleanup
+                await cleanupCallback?.();
                 setTrigger(() => ({
                     type: 'success',
                     value: true

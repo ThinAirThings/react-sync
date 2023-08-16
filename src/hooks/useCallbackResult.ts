@@ -9,7 +9,7 @@ export type Result<T> =
 
 
 export type Trigger = Result<boolean>
-export const useTrigger = (initialTriggerState: 'triggered' | 'done') => {
+export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCallback?: () => Promise<void>) => {
     const [trigger, setTrigger] = useState<Trigger>(
         initialTriggerState === 'triggered' 
         ? {
@@ -20,8 +20,10 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done') => {
     )
     return [
         trigger,
-        (triggerState: 'triggered' | 'done') => {
+        async (triggerState: 'triggered' | 'done') => {
             if (triggerState === 'triggered') {
+                // Run cleanup
+                await cleanupCallback?.()
                 setTrigger(() => ({
                     type: 'success',
                     value: true
