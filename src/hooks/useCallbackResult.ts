@@ -32,7 +32,7 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done') => {
                 }))
             }
         }
-    ]
+    ] as const
 }
 
 export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
