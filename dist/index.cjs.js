@@ -32,7 +32,7 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
     // Run the callback
     React.useEffect(() => {
         (async () => {
-            if (trigger) {
+            if (trigger === 'triggered') {
                 setResult(() => ({
                     type: 'pending'
                 }));

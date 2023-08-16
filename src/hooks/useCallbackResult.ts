@@ -52,7 +52,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (trigger) {
+            if (trigger === 'triggered') {
                 setResult(() => ({
                     type: 'pending'
                 }))
