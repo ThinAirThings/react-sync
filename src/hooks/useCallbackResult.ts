@@ -53,9 +53,9 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     useEffect(() => {
         (async () => {
             if (trigger === 'triggered') {
-                setResult(() => ({
-                    type: 'pending'
-                }))
+                setResult((draft) => {
+                    draft.type = 'pending'
+                })
                 setTrigger('done')
                 return
             }

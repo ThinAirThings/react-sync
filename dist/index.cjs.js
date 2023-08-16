@@ -33,9 +33,9 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
     React.useEffect(() => {
         (async () => {
             if (trigger === 'triggered') {
-                setResult(() => ({
-                    type: 'pending'
-                }));
+                setResult((draft) => {
+                    draft.type = 'pending';
+                });
                 setTrigger('done');
                 return;
             }
