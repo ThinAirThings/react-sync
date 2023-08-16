@@ -7,6 +7,8 @@ export type Result<T> = {
     type: 'failure';
     error: Error;
 };
+export type Trigger = Result<boolean>;
+export declare const useTrigger: () => (Trigger | ((triggerState: 'triggered' | 'done') => void))[];
 export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, resultHandlers?: {
     pending?: (failureLog: {
         retryCount: number;

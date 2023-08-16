@@ -6,7 +6,6 @@
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
     "types": "dist/index.d.ts",
-    "type": "module",
     "devDependencies": {
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-commonjs": "^25.0.4",
@@ -23,7 +22,7 @@
     },
     "scripts": {
         "build": "rollup -c",
-        "npmpub": "tsc && git add . && git commit -m \"mod\" && git push && npm version patch && npm publish --access public"
+        "npmpub": "rollup -c && git add . && git commit -m \"mod\" && git push && npm version patch && npm publish --access public"
     },
     "files": [
         "dist"

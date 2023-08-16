@@ -3,6 +3,29 @@
 var React = require('react');
 var useImmer = require('use-immer');
 
+const useTrigger = () => {
+    const [trigger, setTrigger] = React.useState({
+        type: 'success',
+        value: true
+    });
+    return [
+        trigger,
+        (triggerState) => {
+            if (triggerState === 'triggered') {
+                setTrigger({
+                    type: 'success',
+                    value: true
+                });
+            }
+            else if (triggerState === 'done') {
+                setTrigger({
+                    type: 'success',
+                    value: false
+                });
+            }
+        }
+    ];
+};
 const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Set result state
     const [result, setResult] = useImmer.useImmer({
@@ -16,9 +39,9 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     React.useEffect(() => {
         (async () => {
             if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
-                setResult(() => ({
-                    type: 'pending'
-                }));
+                setResult((draft) => {
+                    draft.type = 'pending';
+                });
                 return;
             }
             if (result.type !== 'pending')
@@ -129,4 +152,5 @@ exports.DependencyLayer = DependencyLayer;
 exports.useCallbackResult = useCallbackResult;
 exports.useDependencyResolver = useDependencyResolver;
 exports.useDependencyResolverContext = useDependencyResolverContext;
+exports.useTrigger = useTrigger;
 exports.useUpdateParentDependencyFromChildMap = useUpdateParentDependencyFromChildMap;

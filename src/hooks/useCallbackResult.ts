@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useImmer } from "use-immer"
 
 
@@ -7,6 +7,30 @@ export type Result<T> =
     | {type: 'success', value: T}
     | {type: 'failure', error: Error}
 
+
+export type Trigger = Result<boolean>
+export const useTrigger = () => {
+    const [trigger, setTrigger] = useState<Trigger>({
+        type: 'success',
+        value: true
+    })
+    return [
+        trigger,
+        (triggerState: 'triggered' | 'done') => {
+            if (triggerState === 'triggered') {
+                setTrigger({
+                    type: 'success',
+                    value: true
+                })
+            } else if (triggerState === 'done') {
+                setTrigger({
+                    type: 'success',
+                    value: false
+                })
+            }
+        }
+    ]
+}
 
 export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }) => Promise<T>,
@@ -36,9 +60,10 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     useEffect(() => {
         (async () => {
             if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
-                setResult(() => ({
-                    type: 'pending'
-                }))
+
+                setResult((draft) => {
+                    draft.type = 'pending'
+                })
                 return
             }
             if (result.type !== 'pending') return
