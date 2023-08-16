@@ -64,9 +64,8 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (!dependencies.map(dependencyResult => 
-                dependencyResult.type === 'success' 
-                || (dependencyResult.type === 'trigger' && dependencyResult.state === 'triggered')
+            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success' 
+                || (dependencyResult.type === "trigger" && (dependencyResult.state === "done"))
             ).every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending'
