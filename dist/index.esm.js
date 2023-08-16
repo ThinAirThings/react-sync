@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
-import { useImmer } from "use-immer";
-export const useCallbackResult = (callback, dependencies, resultHandlers) => {
+import React, { useRef, useEffect, createContext, useContext, Fragment, useState } from 'react';
+import { useImmer } from 'use-immer';
+
+const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Set result state
     const [result, setResult] = useImmer({
         type: 'pending'
@@ -78,3 +79,48 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     }, [result, ...dependencies]);
     return result;
 };
+
+const ParentDependencyUpdaterContext = createContext(null);
+const useUpdateParentDependencyFromChildMap = () => useContext(ParentDependencyUpdaterContext);
+const DependencyResolverContext = createContext(null);
+const useDependencyResolverContext = () => useContext(DependencyResolverContext);
+// Dependency Control Layer
+const DependencyLayer = ({ dependencyTable, dependencyPropsTable, children, }) => {
+    const [dependencyResolutionMap, updateDependencyResolutionMap] = useImmer(new Map(Object.entries(dependencyTable).map(([key]) => [
+        key, false
+    ])));
+    return (React.createElement(Fragment, null,
+        Object.entries(dependencyTable).map(([key, Component]) => {
+            const forwardProps = dependencyPropsTable?.[key];
+            return React.createElement(DependencyResolverContext.Provider, { key: key, value: [
+                    dependencyResolutionMap.get(key),
+                    (resolved) => updateDependencyResolutionMap(draft => {
+                        draft.set(key, resolved);
+                    })
+                ] },
+                React.createElement(Component, { ...forwardProps ?? {} }));
+        }),
+        React.createElement(ParentDependencyUpdaterContext.Provider, { value: updateDependencyResolutionMap }, [...dependencyResolutionMap].every(([_, resolved]) => resolved)
+            && children)));
+};
+
+const useDependencyResolver = ({ callback, cleanup }) => {
+    const [dependencyResolved, setDependencyResolved] = useDependencyResolverContext();
+    const [cleaningUp, setCleaningUp] = useState(false);
+    const cleaningUpRef = useRef(cleaningUp);
+    cleaningUpRef.current = cleaningUp;
+    useEffect(() => {
+        if (!dependencyResolved && !cleaningUp && !cleaningUpRef.current) {
+            callback(setDependencyResolved);
+        }
+        return () => {
+            if (!dependencyResolved || cleaningUp)
+                return; // Don't run when flipped from false to true
+            setCleaningUp(true);
+            cleaningUpRef.current = true;
+            cleanup?.(setCleaningUp);
+        };
+    }, [dependencyResolved, cleaningUp]);
+};
+
+export { DependencyLayer, useCallbackResult, useDependencyResolver, useDependencyResolverContext, useUpdateParentDependencyFromChildMap };

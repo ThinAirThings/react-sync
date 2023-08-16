@@ -1,8 +1,9 @@
-import { FC, ReactNode, createContext, useContext } from "react"
+import { FC, Fragment, ReactNode, createContext, useContext } from "react"
 import { useImmer } from "use-immer"
-
+import React from 'react'
 // Dependency Context
-const ParentDependencyUpdaterContext = createContext<ReturnType<typeof useImmer<Map<string, boolean>>>[1]>(null as any)
+type UseImmerReturnType = ReturnType<typeof useImmer<Map<string, boolean>>>
+const ParentDependencyUpdaterContext = createContext<UseImmerReturnType[1]>(null as any)
 export const useUpdateParentDependencyFromChildMap = () => useContext(ParentDependencyUpdaterContext)
 const DependencyResolverContext = createContext<[boolean, (resolved: boolean) => void]>(null as any)
 export const useDependencyResolverContext = () => useContext(DependencyResolverContext)
@@ -13,7 +14,7 @@ export const DependencyLayer = <
 >({
     dependencyTable,
     dependencyPropsTable,
-    children
+    children,
 }: {
     dependencyTable: DependencyTable,
     dependencyPropsTable: {
@@ -28,7 +29,7 @@ export const DependencyLayer = <
             key, false
         ])
     ))
-    return <>
+    return (<Fragment>
         {Object.entries(dependencyTable).map(([key, Component]) => { 
             const forwardProps = dependencyPropsTable?.[key]
             return <DependencyResolverContext.Provider 
@@ -50,5 +51,5 @@ export const DependencyLayer = <
                 && children
             }
         </ParentDependencyUpdaterContext.Provider>
-    </>
+    </Fragment>)
 }

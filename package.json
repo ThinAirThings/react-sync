@@ -1,10 +1,33 @@
 {
     "name": "@thinairthings/react-sync",
+    "author": "Dan Lannan",
     "version": "1.0.12",
     "description": "React Synchronization Library",
-    "main": "dist/index.js",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
     "types": "dist/index.d.ts",
     "type": "module",
+    "devDependencies": {
+        "@rollup/plugin-babel": "^6.0.3",
+        "@rollup/plugin-commonjs": "^25.0.4",
+        "@rollup/plugin-json": "^6.0.0",
+        "@rollup/plugin-node-resolve": "^15.1.0",
+        "@rollup/plugin-typescript": "^11.1.2",
+        "@types/react": "^18.0.32",
+        "tslib": "^2.6.1",
+        "typescript": "^5.1.6"
+    },
+    "peerDependencies": {
+        "react": "^18.2.0",
+        "use-immer": "^0.9.0"
+    },
+    "scripts": {
+        "build": "rollup -c",
+        "npmpub": "tsc && git add . && git commit -m \"mod\" && git push && npm version patch && npm publish --access public"
+    },
+    "files": [
+        "dist"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/ThinAirThings/react-sync.git"
@@ -12,17 +35,5 @@
     "publishConfig": {
         "registry": "https://npm.pkg.github.com/",
         "access": "restricted"
-    },
-    "scripts": {
-        "npmpub": "tsc && git add . && git commit -m \"mod\" && git push && npm version patch && npm publish --access public"
-    },
-    "keywords": [],
-    "author": "Dan Lannan",
-    "devDependencies": {
-        "@types/react": "^18.0.32"
-    },
-    "peerDependencies": {
-        "use-immer": "^0.9.0",
-        "react": "^18.2.0"
     }
 }

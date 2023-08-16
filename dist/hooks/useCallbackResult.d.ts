@@ -8,14 +8,14 @@ export type Result<T> = {
     error: Error;
 };
 export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, resultHandlers?: {
-    pending?: ((failureLog: {
+    pending?: (failureLog: {
         retryCount: number;
         errorLog: Array<Error>;
-    }) => void) | undefined;
-    failure?: ((error: Error, failureLog: {
-        runRetry: (newCallback?: ((depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) | undefined) => void;
+    }) => void;
+    failure?: (error: Error, failureLog: {
+        runRetry: (newCallback?: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) => void;
         retryCount: number;
         errorLog: Array<Error>;
-    }) => void) | undefined;
-    success?: ((value: T) => void) | undefined;
-} | undefined) => Result<T>;
+    }) => void;
+    success?: (value: T) => void;
+}) => Result<T>;
