@@ -12,16 +12,15 @@ const useTrigger = () => {
         trigger,
         (triggerState) => {
             if (triggerState === 'triggered') {
-                setTrigger({
+                setTrigger(() => ({
                     type: 'success',
                     value: true
-                });
+                }));
             }
             else if (triggerState === 'done') {
-                setTrigger({
-                    type: 'success',
-                    value: false
-                });
+                setTrigger(() => ({
+                    type: 'pending',
+                }));
             }
         }
     ];

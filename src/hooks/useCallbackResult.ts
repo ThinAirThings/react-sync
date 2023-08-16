@@ -18,15 +18,14 @@ export const useTrigger = () => {
         trigger,
         (triggerState: 'triggered' | 'done') => {
             if (triggerState === 'triggered') {
-                setTrigger({
+                setTrigger(() => ({
                     type: 'success',
                     value: true
-                })
+                }))
             } else if (triggerState === 'done') {
-                setTrigger({
-                    type: 'success',
-                    value: false
-                })
+                setTrigger(() => ({
+                    type: 'pending',
+                }))
             }
         }
     ]
@@ -60,7 +59,6 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     useEffect(() => {
         (async () => {
             if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
-
                 setResult((draft) => {
                     draft.type = 'pending'
                 })
