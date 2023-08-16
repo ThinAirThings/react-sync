@@ -39,9 +39,7 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 setTrigger('done');
                 return;
             }
-            if (!dependencies
-                .map(dependencyResult => dependencyResult.type === 'success')
-                .every(Boolean)) {
+            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending';
                 });
@@ -58,6 +56,7 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 failureRetryCountRef.current = 0;
                 failureErrorLogRef.current.length = 0;
                 failureRetryCallbackRef.current = null;
+                lifecycleHandlers?.success?.(success);
                 setResult(() => ({
                     type: 'success',
                     value: success
@@ -103,9 +102,9 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 retryCount: failureRetryCountRef.current
             });
         }
-        else if (result.type === 'success') {
-            lifecycleHandlers?.success?.(result.value);
-        }
+        // else if (result.type === 'success') {
+        //     lifecycleHandlers?.success?.(result.value)
+        // }
     }, [result, ...dependencies]);
     return [result, setTrigger];
 };

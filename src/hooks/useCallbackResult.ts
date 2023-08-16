@@ -59,10 +59,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 setTrigger('done')
                 return
             }
-            if (!dependencies
-                    .map(dependencyResult => dependencyResult.type === 'success')
-                    .every(Boolean)
-            ) {
+            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending'
                 })
@@ -79,6 +76,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 failureRetryCountRef.current = 0
                 failureErrorLogRef.current.length = 0
                 failureRetryCallbackRef.current = null
+                lifecycleHandlers?.success?.(success)
                 setResult(() => ({
                     type: 'success',
                     value: success
@@ -119,9 +117,10 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 errorLog: failureErrorLogRef.current,
                 retryCount: failureRetryCountRef.current
             })
-        } else if (result.type === 'success') {
-            lifecycleHandlers?.success?.(result.value)
-        }
+        } 
+        // else if (result.type === 'success') {
+        //     lifecycleHandlers?.success?.(result.value)
+        // }
     }, [result, ...dependencies])
     return [result, setTrigger] as const
 }
