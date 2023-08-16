@@ -37,19 +37,16 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 setTrigger('done');
                 return;
             }
-            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
+            if (!dependencies
+                .map(dependencyResult => dependencyResult.type === 'success')
+                .every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending';
                 });
                 return;
             }
-            if (result.type !== 'pending') {
-                lifecycleHandlers?.pending?.({
-                    errorLog: failureErrorLogRef.current,
-                    retryCount: failureRetryCountRef.current
-                });
+            if (result.type !== 'pending')
                 return;
-            }
             const depValues = dependencies.map(dep => dep.value);
             try {
                 const success = failureRetryCallbackRef.current
@@ -59,7 +56,6 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 failureRetryCountRef.current = 0;
                 failureErrorLogRef.current.length = 0;
                 failureRetryCallbackRef.current = null;
-                lifecycleHandlers?.success?.(success); // Run success handler
                 setResult(() => ({
                     type: 'success',
                     value: success
@@ -67,22 +63,6 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
             }
             catch (_error) {
                 const error = _error;
-                failureRetryCountRef.current++;
-                failureErrorLogRef.current.push(error);
-                const runRetry = (newCallback) => {
-                    if (newCallback)
-                        failureRetryCallbackRef.current = newCallback;
-                    else
-                        failureRetryCallbackRef.current = null;
-                    setResult(() => ({
-                        type: 'pending'
-                    }));
-                };
-                lifecycleHandlers?.failure?.(error, {
-                    runRetry,
-                    errorLog: failureErrorLogRef.current,
-                    retryCount: failureRetryCountRef.current
-                });
                 setResult(() => ({
                     type: 'failure',
                     value: error
@@ -90,37 +70,41 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
             }
         })();
     }, [trigger, result, ...dependencies]); // Add result here
-    // // Run the result handlers
-    // useEffect(() => {
-    //     if (!dependencies
-    //         .map(dependencyResult => dependencyResult.type === 'success')
-    //         .every(Boolean)
-    //     ) return 
-    //     // Handle Errors
-    //     if (result.type === 'failure') {
-    //         failureRetryCountRef.current++
-    //         failureErrorLogRef.current.push(result.error)
-    //         const runRetry = (newCallback?: typeof callback) => {
-    //             if (newCallback) failureRetryCallbackRef.current = newCallback
-    //             else failureRetryCallbackRef.current = null
-    //             setResult(() => ({
-    //                 type: 'pending'
-    //             }))
-    //         }
-    //         lifecycleHandlers?.failure?.(result.error, {
-    //             runRetry,
-    //             errorLog: failureErrorLogRef.current, 
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } else if (result.type === 'pending') {
-    //         lifecycleHandlers?.pending?.({
-    //             errorLog: failureErrorLogRef.current,
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } else if (result.type === 'success') {
-    //         lifecycleHandlers?.success?.(result.value)
-    //     }
-    // }, [result, ...dependencies])
+    // Run the result handlers
+    useEffect(() => {
+        if (!dependencies
+            .map(dependencyResult => dependencyResult.type === 'success')
+            .every(Boolean))
+            return;
+        // Handle Errors
+        if (result.type === 'failure') {
+            failureRetryCountRef.current++;
+            failureErrorLogRef.current.push(result.error);
+            const runRetry = (newCallback) => {
+                if (newCallback)
+                    failureRetryCallbackRef.current = newCallback;
+                else
+                    failureRetryCallbackRef.current = null;
+                setResult(() => ({
+                    type: 'pending'
+                }));
+            };
+            lifecycleHandlers?.failure?.(result.error, {
+                runRetry,
+                errorLog: failureErrorLogRef.current,
+                retryCount: failureRetryCountRef.current
+            });
+        }
+        else if (result.type === 'pending') {
+            lifecycleHandlers?.pending?.({
+                errorLog: failureErrorLogRef.current,
+                retryCount: failureRetryCountRef.current
+            });
+        }
+        else if (result.type === 'success') {
+            lifecycleHandlers?.success?.(result.value);
+        }
+    }, [result, ...dependencies]);
     return [result, setTrigger];
 };
 

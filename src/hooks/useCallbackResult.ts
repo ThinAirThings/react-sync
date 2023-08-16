@@ -59,19 +59,16 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 setTrigger('done')
                 return
             }
-            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
+            if (!dependencies
+                    .map(dependencyResult => dependencyResult.type === 'success')
+                    .every(Boolean)
+            ) {
                 setResult((draft) => {
                     draft.type = 'pending'
                 })
                 return
             }
-            if (result.type !== 'pending') {
-                lifecycleHandlers?.pending?.({
-                    errorLog: failureErrorLogRef.current,
-                    retryCount: failureRetryCountRef.current
-                })
-                return
-            }
+            if (result.type !== 'pending') return
             const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
             try {
                 const success = failureRetryCallbackRef.current 
@@ -82,27 +79,12 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 failureRetryCountRef.current = 0
                 failureErrorLogRef.current.length = 0
                 failureRetryCallbackRef.current = null
-                lifecycleHandlers?.success?.(success)   // Run success handler
                 setResult(() => ({
                     type: 'success',
                     value: success
                 }))
             } catch (_error) {
                 const error = _error as Error
-                failureRetryCountRef.current++
-                failureErrorLogRef.current.push(error)
-                const runRetry = (newCallback?: typeof callback) => {
-                    if (newCallback) failureRetryCallbackRef.current = newCallback
-                    else failureRetryCallbackRef.current = null
-                    setResult(() => ({
-                        type: 'pending'
-                    }))
-                }
-                lifecycleHandlers?.failure?.(error, {
-                    runRetry,
-                    errorLog: failureErrorLogRef.current, 
-                    retryCount: failureRetryCountRef.current
-                })
                 setResult(() => ({
                     type: 'failure',
                     value: error
@@ -110,36 +92,36 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
             }
         })()
     }, [trigger, result, ...dependencies])   // Add result here
-    // // Run the result handlers
-    // useEffect(() => {
-    //     if (!dependencies
-    //         .map(dependencyResult => dependencyResult.type === 'success')
-    //         .every(Boolean)
-    //     ) return 
-    //     // Handle Errors
-    //     if (result.type === 'failure') {
-    //         failureRetryCountRef.current++
-    //         failureErrorLogRef.current.push(result.error)
-    //         const runRetry = (newCallback?: typeof callback) => {
-    //             if (newCallback) failureRetryCallbackRef.current = newCallback
-    //             else failureRetryCallbackRef.current = null
-    //             setResult(() => ({
-    //                 type: 'pending'
-    //             }))
-    //         }
-    //         lifecycleHandlers?.failure?.(result.error, {
-    //             runRetry,
-    //             errorLog: failureErrorLogRef.current, 
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } else if (result.type === 'pending') {
-    //         lifecycleHandlers?.pending?.({
-    //             errorLog: failureErrorLogRef.current,
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } else if (result.type === 'success') {
-    //         lifecycleHandlers?.success?.(result.value)
-    //     }
-    // }, [result, ...dependencies])
+    // Run the result handlers
+    useEffect(() => {
+        if (!dependencies
+            .map(dependencyResult => dependencyResult.type === 'success')
+            .every(Boolean)
+        ) return 
+        // Handle Errors
+        if (result.type === 'failure') {
+            failureRetryCountRef.current++
+            failureErrorLogRef.current.push(result.error)
+            const runRetry = (newCallback?: typeof callback) => {
+                if (newCallback) failureRetryCallbackRef.current = newCallback
+                else failureRetryCallbackRef.current = null
+                setResult(() => ({
+                    type: 'pending'
+                }))
+            }
+            lifecycleHandlers?.failure?.(result.error, {
+                runRetry,
+                errorLog: failureErrorLogRef.current, 
+                retryCount: failureRetryCountRef.current
+            })
+        } else if (result.type === 'pending') {
+            lifecycleHandlers?.pending?.({
+                errorLog: failureErrorLogRef.current,
+                retryCount: failureRetryCountRef.current
+            })
+        } else if (result.type === 'success') {
+            lifecycleHandlers?.success?.(result.value)
+        }
+    }, [result, ...dependencies])
     return [result, setTrigger] as const
 }
