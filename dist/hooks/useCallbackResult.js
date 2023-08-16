@@ -1,14 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useImmer } from "use-immer";
 export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Set result state
     const [result, setResult] = useImmer({
         type: 'pending'
     });
+    // Set the retry count ref
+    const failureRetryCountRef = useRef(0);
+    // Run the callback
     useEffect(() => {
         (async () => {
             if (!dependencies.map(result => result.type === 'success').every(Boolean))
                 return;
+            failureRetryCountRef.current = 0;
             const depValues = dependencies.map(dep => dep.value);
             try {
                 const success = await callback(depValues);
@@ -26,10 +30,11 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
             }
         })();
     }, [...dependencies]);
+    // Run the result handlers
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean))
             return;
-        resultHandlers?.[result.type]?.(result);
+        resultHandlers?.[result.type]?.(result, result.type === 'failure' ? failureRetryCountRef.current : undefined);
     }, [result, ...dependencies]);
     return result;
 };

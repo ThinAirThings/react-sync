@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useImmer } from "use-immer"
 
 
@@ -14,17 +14,20 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     resultHandlers?: {
         pending?: () => void,
         success?: (value: T) => void,
-        failure?: (error: Error) => void
+        failure?: (error: Error, retryCount?:number) => void
     }, 
 ) => {
     // Set result state
     const [result, setResult] = useImmer<Result<T>>({
         type: 'pending'
     })
-
+    // Set the retry count ref
+    const failureRetryCountRef = useRef(0)
+    // Run the callback
     useEffect(() => {
         (async () => {
-            if (!dependencies.map(result => result.type === 'success').every(Boolean)) return 
+            if (!dependencies.map(result => result.type === 'success').every(Boolean)) return
+            failureRetryCountRef.current = 0
             const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
             try {
                 const success = await callback(depValues)
@@ -41,10 +44,10 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
             }
         })()
     }, [...dependencies])
-
+    // Run the result handlers
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean)) return 
-        resultHandlers?.[result.type]?.(result as any)
+        resultHandlers?.[result.type]?.(result as any, result.type === 'failure' ? failureRetryCountRef.current : undefined)
     }, [result, ...dependencies])
     return result
 }
