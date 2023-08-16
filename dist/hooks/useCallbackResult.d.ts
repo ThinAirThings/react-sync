@@ -8,7 +8,7 @@ export type Result<T> = {
     error: Error;
 };
 export type Trigger = Result<boolean>;
-export declare const useTrigger: () => (Trigger | ((triggerState: 'triggered' | 'done') => void))[];
+export declare const useTrigger: (initialTriggerState: 'triggered' | 'done') => (Trigger | ((triggerState: 'triggered' | 'done') => void))[];
 export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, resultHandlers?: {
     pending?: (failureLog: {
         retryCount: number;

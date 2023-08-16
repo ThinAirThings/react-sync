@@ -3,11 +3,13 @@
 var React = require('react');
 var useImmer = require('use-immer');
 
-const useTrigger = () => {
-    const [trigger, setTrigger] = React.useState({
-        type: 'success',
-        value: true
-    });
+const useTrigger = (initialTriggerState) => {
+    const [trigger, setTrigger] = React.useState(initialTriggerState === 'triggered'
+        ? {
+            type: 'success',
+            value: true
+        }
+        : { type: 'pending' });
     return [
         trigger,
         (triggerState) => {

@@ -9,11 +9,15 @@ export type Result<T> =
 
 
 export type Trigger = Result<boolean>
-export const useTrigger = () => {
-    const [trigger, setTrigger] = useState<Trigger>({
-        type: 'success',
-        value: true
-    })
+export const useTrigger = (initialTriggerState: 'triggered' | 'done') => {
+    const [trigger, setTrigger] = useState<Trigger>(
+        initialTriggerState === 'triggered' 
+        ? {
+            type: 'success',
+            value: true
+        } 
+        : { type: 'pending'}
+    )
     return [
         trigger,
         (triggerState: 'triggered' | 'done') => {
