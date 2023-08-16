@@ -39,8 +39,10 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success'
-                || (dependencyResult.type === "trigger" && (dependencyResult.state === "done"))).every(Boolean)) {
+            if (!dependencies
+                .filter(dep => dep.type !== "trigger")
+                .map(dependencyResult => dependencyResult.type === 'success')
+                .every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending';
                 });
