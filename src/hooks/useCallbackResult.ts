@@ -12,13 +12,16 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }) => Promise<T>,
     dependencies: Deps,
     resultHandlers?: {
-        pending?: () => void,
-        success?: (value: T) => void,
+        pending?: (failureLog: {
+            retryCount: number,
+            errorLog: Array<Error>
+        }) => void,
         failure?: (error: Error, failureLog: {
             runRetry: (newCallback?: typeof callback) => void,
             retryCount: number,
             errorLog: Array<Error>
         }) => void
+        success?: (value: T) => void
     }, 
 ) => {
     // Set result state
@@ -78,9 +81,14 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 errorLog: failureErrorLogRef.current, 
                 retryCount: failureRetryCountRef.current
             })
-            return
+        } else if (result.type === 'pending') {
+            resultHandlers?.pending?.({
+                errorLog: failureErrorLogRef.current,
+                retryCount: failureRetryCountRef.current
+            })
+        } else if (result.type === 'success') {
+            resultHandlers?.success?.(result.value)
         }
-        resultHandlers?.[result.type]?.(result as any)
     }, [result, ...dependencies])
     return result
 }

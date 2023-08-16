@@ -60,9 +60,16 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
                 errorLog: failureErrorLogRef.current,
                 retryCount: failureRetryCountRef.current
             });
-            return;
         }
-        resultHandlers?.[result.type]?.(result);
+        else if (result.type === 'pending') {
+            resultHandlers?.pending?.({
+                errorLog: failureErrorLogRef.current,
+                retryCount: failureRetryCountRef.current
+            });
+        }
+        else if (result.type === 'success') {
+            resultHandlers?.success?.(result.value);
+        }
     }, [result, ...dependencies]);
     return result;
 };
