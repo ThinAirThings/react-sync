@@ -8,7 +8,6 @@ export type Result<T> =
     | {type: 'failure', error: Error}
     | {type: 'trigger', state: 'triggered' | 'done'}
 
-
 export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCallback?: () => Promise<void>) => {
     const [trigger, setTrigger] = useState<Result<void>&{type:"trigger"}>(
         initialTriggerState === 'triggered' 
@@ -62,11 +61,12 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (dependencies
-                .filter(dep => dep.type === 'trigger')
-                .map((dep: any) => dep.state === 'triggered')
-                .some(Boolean)
-            ) {
+            // Get triggers
+            const triggers = dependencies.filter(dep => dep.type === 'trigger') as Array<Result<void> & { type: 'trigger' }>
+            if (triggers.length > 0 && triggers.map(trigger => trigger.state === 'triggered').some(Boolean)) {
+                triggers.forEach(trigger => {
+                    trigger.state = 'done'
+                })
                 setResult((draft) => {
                     draft.type = 'pending'
                 })

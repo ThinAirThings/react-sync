@@ -37,10 +37,12 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (dependencies
-                .filter(dep => dep.type === 'trigger')
-                .map((dep) => dep.state === 'triggered')
-                .some(Boolean)) {
+            // Get triggers
+            const triggers = dependencies.filter(dep => dep.type === 'trigger');
+            if (triggers.length > 0 && triggers.map(trigger => trigger.state === 'triggered').some(Boolean)) {
+                triggers.forEach(trigger => {
+                    trigger.state = 'done';
+                });
                 setResult((draft) => {
                     draft.type = 'pending';
                 });
