@@ -5,11 +5,8 @@ var useImmer = require('use-immer');
 
 const useTrigger = (initialTriggerState, cleanupCallback) => {
     const [trigger, setTrigger] = React.useState(initialTriggerState === 'triggered'
-        ? {
-            type: 'success',
-            value: 'triggered'
-        }
-        : { type: 'pending' });
+        ? { type: 'trigger', state: 'triggered' }
+        : { type: 'trigger', state: 'done' });
     React.useRef(initialTriggerState);
     return [
         trigger,
@@ -17,16 +14,15 @@ const useTrigger = (initialTriggerState, cleanupCallback) => {
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.();
-                // triggerValueRef.current = 'triggered'
                 setTrigger(() => ({
-                    type: 'success',
-                    value: 'triggered'
+                    type: 'trigger',
+                    state: 'triggered'
                 }));
             }
             else if (triggerState === 'done') {
-                // triggerValueRef.current = 'done'
                 setTrigger(() => ({
-                    type: 'pending',
+                    type: 'trigger',
+                    state: 'done'
                 }));
             }
         },
@@ -45,7 +41,8 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the callback
     React.useEffect(() => {
         (async () => {
-            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
+            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success'
+                || (dependencyResult.type === 'trigger' && dependencyResult.state === 'triggered')).every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending';
                 });

@@ -6,17 +6,14 @@ export type Result<T> =
     | {type: 'pending'}
     | {type: 'success', value: T}
     | {type: 'failure', error: Error}
+    | {type: 'trigger', state: 'triggered' | 'done'}
 
 
-export type Trigger = Result<'triggered'|'done'>
 export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCallback?: () => Promise<void>) => {
-    const [trigger, setTrigger] = useState<Trigger>(
+    const [trigger, setTrigger] = useState<Result<void>&{type:"trigger"}>(
         initialTriggerState === 'triggered' 
-        ? {
-            type: 'success',
-            value: 'triggered'
-        } 
-        : { type: 'pending'}
+            ? { type: 'trigger', state: 'triggered'} 
+            : { type: 'trigger', state: 'done'}
     )
     const triggerValueRef = useRef(initialTriggerState)
     return [
@@ -25,15 +22,14 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCal
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.()
-                // triggerValueRef.current = 'triggered'
                 setTrigger(() => ({
-                    type: 'success',
-                    value: 'triggered'
+                    type: 'trigger',
+                    state: 'triggered'
                 }))
             } else if (triggerState === 'done') {
-                // triggerValueRef.current = 'done'
                 setTrigger(() => ({
-                    type: 'pending',
+                    type: 'trigger',
+                    state: 'done'
                 }))
             }
         },
@@ -68,7 +64,10 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
-            if (!dependencies.map(dependencyResult => dependencyResult.type === 'success').every(Boolean)) {
+            if (!dependencies.map(dependencyResult => 
+                dependencyResult.type === 'success' 
+                || (dependencyResult.type === 'trigger' && dependencyResult.state === 'triggered')
+            ).every(Boolean)) {
                 setResult((draft) => {
                     draft.type = 'pending'
                 })
