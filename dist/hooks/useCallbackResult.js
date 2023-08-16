@@ -7,12 +7,14 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     });
     // Set the retry count ref
     const failureRetryCountRef = useRef(0);
+    const failureErrorLogRef = useRef([]);
     // Run the callback
     useEffect(() => {
         (async () => {
             if (!dependencies.map(result => result.type === 'success').every(Boolean))
                 return;
             failureRetryCountRef.current = 0;
+            failureErrorLogRef.current.length = 0;
             const depValues = dependencies.map(dep => dep.value);
             try {
                 const success = await callback(depValues);
@@ -34,7 +36,7 @@ export const useCallbackResult = (callback, dependencies, resultHandlers) => {
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean))
             return;
-        resultHandlers?.[result.type]?.(result, failureRetryCountRef.current);
+        resultHandlers?.[result.type]?.(result, { errorLog: failureErrorLogRef.current, retryCount: failureRetryCountRef.current });
     }, [result, ...dependencies]);
     return result;
 };

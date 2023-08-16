@@ -14,7 +14,10 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     resultHandlers?: {
         pending?: () => void,
         success?: (value: T) => void,
-        failure?: (error: Error, retryCount:number) => void
+        failure?: (error: Error, failureLog: {
+            retryCount: number,
+            errorLog: Array<Error>
+        }) => void
     }, 
 ) => {
     // Set result state
@@ -23,11 +26,13 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     })
     // Set the retry count ref
     const failureRetryCountRef = useRef(0)
+    const failureErrorLogRef = useRef<Array<Error>>([])
     // Run the callback
     useEffect(() => {
         (async () => {
             if (!dependencies.map(result => result.type === 'success').every(Boolean)) return
             failureRetryCountRef.current = 0
+            failureErrorLogRef.current.length = 0
             const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
             try {
                 const success = await callback(depValues)
@@ -47,7 +52,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the result handlers
     useEffect(() => {
         if (!dependencies.map(result => result.type === 'success').every(Boolean)) return 
-        resultHandlers?.[result.type]?.(result as any, failureRetryCountRef.current)
+        resultHandlers?.[result.type]?.(result as any, {errorLog: failureErrorLogRef.current, retryCount: failureRetryCountRef.current})
     }, [result, ...dependencies])
     return result
 }
