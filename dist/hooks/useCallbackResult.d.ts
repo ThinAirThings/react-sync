@@ -6,17 +6,9 @@ export type Result<T> = {
 } | {
     type: 'failure';
     error: Error;
-} | {
-    type: 'trigger';
-    state: 'triggered' | 'done';
 };
-export declare const useTrigger: (initialTriggerState: 'triggered' | 'done', cleanupCallback?: () => Promise<void>) => readonly [{
-    type: 'trigger';
-    state: 'triggered' | 'done';
-} & {
-    type: "trigger";
-}, (triggerState: 'triggered' | 'done') => Promise<void>];
-export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, resultHandlers?: {
+export declare const useTrigger: (cleanupCallback?: () => Promise<void>) => readonly ["triggered" | "done", (triggerState: 'triggered' | 'done') => Promise<void>];
+export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, lifecycleHandlers?: {
     pending?: (failureLog: {
         retryCount: number;
         errorLog: Array<Error>;
@@ -27,4 +19,5 @@ export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback
         errorLog: Array<Error>;
     }) => void;
     success?: (value: T) => void;
-}) => Result<T>;
+    cleanup?: () => Promise<void>;
+}) => readonly [Result<T>, (triggerState: 'triggered' | 'done') => Promise<void>];

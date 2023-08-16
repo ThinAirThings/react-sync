@@ -3,35 +3,28 @@
 var React = require('react');
 var useImmer = require('use-immer');
 
-const useTrigger = (initialTriggerState, cleanupCallback) => {
-    const [trigger, setTrigger] = React.useState(initialTriggerState === 'triggered'
-        ? { type: 'trigger', state: 'triggered' }
-        : { type: 'trigger', state: 'done' });
+const useTrigger = (cleanupCallback) => {
+    const [trigger, setTrigger] = React.useState('triggered');
     return [
         trigger,
         async (triggerState) => {
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.();
-                setTrigger(() => ({
-                    type: 'trigger',
-                    state: 'triggered'
-                }));
+                setTrigger('triggered');
             }
             else if (triggerState === 'done') {
-                setTrigger(() => ({
-                    type: 'trigger',
-                    state: 'done'
-                }));
+                setTrigger('done');
             }
         },
     ];
 };
-const useCallbackResult = (callback, dependencies, resultHandlers) => {
+const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
     // Set result state
     const [result, setResult] = useImmer.useImmer({
         type: 'pending'
     });
+    const [trigger, setTrigger] = useTrigger(lifecycleHandlers?.cleanup);
     // Set the retry count ref
     const failureRetryCountRef = React.useRef(0);
     const failureErrorLogRef = React.useRef([]);
@@ -39,19 +32,14 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the callback
     React.useEffect(() => {
         (async () => {
-            // Get triggers
-            const triggers = dependencies.filter(dep => dep.type === 'trigger');
-            if (triggers.length > 0 && triggers.map(trigger => trigger.state === 'triggered').some(Boolean)) {
-                triggers.forEach(trigger => {
-                    trigger.state = 'done';
-                });
-                setResult((draft) => {
-                    draft.type = 'pending';
-                });
+            if (trigger) {
+                setResult(() => ({
+                    type: 'pending'
+                }));
+                setTrigger('done');
                 return;
             }
             if (!dependencies
-                .filter(dep => dep.type !== "trigger")
                 .map(dependencyResult => dependencyResult.type === 'success')
                 .every(Boolean)) {
                 setResult((draft) => {
@@ -87,7 +75,6 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the result handlers
     React.useEffect(() => {
         if (!dependencies
-            .filter(dep => dep.type !== "trigger")
             .map(dependencyResult => dependencyResult.type === 'success')
             .every(Boolean))
             return;
@@ -104,23 +91,23 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
                     type: 'pending'
                 }));
             };
-            resultHandlers?.failure?.(result.error, {
+            lifecycleHandlers?.failure?.(result.error, {
                 runRetry,
                 errorLog: failureErrorLogRef.current,
                 retryCount: failureRetryCountRef.current
             });
         }
         else if (result.type === 'pending') {
-            resultHandlers?.pending?.({
+            lifecycleHandlers?.pending?.({
                 errorLog: failureErrorLogRef.current,
                 retryCount: failureRetryCountRef.current
             });
         }
         else if (result.type === 'success') {
-            resultHandlers?.success?.(result.value);
+            lifecycleHandlers?.success?.(result.value);
         }
     }, [result, ...dependencies]);
-    return result;
+    return [result, setTrigger];
 };
 
 const ParentDependencyUpdaterContext = React.createContext(null);

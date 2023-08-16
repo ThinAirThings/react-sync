@@ -6,29 +6,18 @@ export type Result<T> =
     | {type: 'pending'}
     | {type: 'success', value: T}
     | {type: 'failure', error: Error}
-    | {type: 'trigger', state: 'triggered' | 'done'}
 
-export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCallback?: () => Promise<void>) => {
-    const [trigger, setTrigger] = useState<Result<void>&{type:"trigger"}>(
-        initialTriggerState === 'triggered' 
-            ? { type: 'trigger', state: 'triggered'} 
-            : { type: 'trigger', state: 'done'}
-    )
+export const useTrigger = (cleanupCallback?: () => Promise<void>) => {
+    const [trigger, setTrigger] = useState<'triggered' | 'done'>('triggered')
     return [
         trigger,
         async (triggerState: 'triggered' | 'done') => {
             if (triggerState === 'triggered') {
                 // Run cleanup
                 await cleanupCallback?.()
-                setTrigger(() => ({
-                    type: 'trigger',
-                    state: 'triggered'
-                }))
+                setTrigger('triggered')
             } else if (triggerState === 'done') {
-                setTrigger(() => ({
-                    type: 'trigger',
-                    state: 'done'
-                }))
+                setTrigger('done')
             }
         },
     ] as const
@@ -37,7 +26,7 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCal
 export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }) => Promise<T>,
     dependencies: Deps,
-    resultHandlers?: {
+    lifecycleHandlers?: {
         pending?: (failureLog: {
             retryCount: number,
             errorLog: Array<Error>
@@ -48,12 +37,14 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
             errorLog: Array<Error>
         }) => void
         success?: (value: T) => void
+        cleanup?: () => Promise<void>
     }, 
 ) => {
     // Set result state
     const [result, setResult] = useImmer<Result<T>>({
         type: 'pending'
     })
+    const [trigger, setTrigger] = useTrigger(lifecycleHandlers?.cleanup)
     // Set the retry count ref
     const failureRetryCountRef = useRef(0)
     const failureErrorLogRef = useRef<Array<Error>>([])
@@ -61,19 +52,14 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
-            // Get triggers
-            const triggers = dependencies.filter(dep => dep.type === 'trigger') as Array<Result<void> & { type: 'trigger' }>
-            if (triggers.length > 0 && triggers.map(trigger => trigger.state === 'triggered').some(Boolean)) {
-                triggers.forEach(trigger => {
-                    trigger.state = 'done'
-                })
-                setResult((draft) => {
-                    draft.type = 'pending'
-                })
+            if (trigger) {
+                setResult(() => ({
+                    type: 'pending'
+                }))
+                setTrigger('done')
                 return
             }
             if (!dependencies
-                    .filter(dep => dep.type !== "trigger")
                     .map(dependencyResult => dependencyResult.type === 'success')
                     .every(Boolean)
             ) {
@@ -109,7 +95,6 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the result handlers
     useEffect(() => {
         if (!dependencies
-            .filter(dep => dep.type !== "trigger")
             .map(dependencyResult => dependencyResult.type === 'success')
             .every(Boolean)
         ) return 
@@ -124,19 +109,19 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                     type: 'pending'
                 }))
             }
-            resultHandlers?.failure?.(result.error, {
+            lifecycleHandlers?.failure?.(result.error, {
                 runRetry,
                 errorLog: failureErrorLogRef.current, 
                 retryCount: failureRetryCountRef.current
             })
         } else if (result.type === 'pending') {
-            resultHandlers?.pending?.({
+            lifecycleHandlers?.pending?.({
                 errorLog: failureErrorLogRef.current,
                 retryCount: failureRetryCountRef.current
             })
         } else if (result.type === 'success') {
-            resultHandlers?.success?.(result.value)
+            lifecycleHandlers?.success?.(result.value)
         }
     }, [result, ...dependencies])
-    return result
+    return [result, setTrigger] as const
 }
