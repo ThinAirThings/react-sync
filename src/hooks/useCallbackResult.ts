@@ -76,6 +76,7 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 failureRetryCountRef.current = 0
                 failureErrorLogRef.current.length = 0
                 failureRetryCallbackRef.current = null
+                // Run success handler here to guarantee it run before the child's useEffect
                 lifecycleHandlers?.success?.(success)
                 setResult(() => ({
                     type: 'success',
@@ -118,9 +119,6 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
                 retryCount: failureRetryCountRef.current
             })
         } 
-        // else if (result.type === 'success') {
-        //     lifecycleHandlers?.success?.(result.value)
-        // }
     }, [result, ...dependencies])
     return [result, setTrigger] as const
 }

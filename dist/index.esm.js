@@ -54,6 +54,7 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 failureRetryCountRef.current = 0;
                 failureErrorLogRef.current.length = 0;
                 failureRetryCallbackRef.current = null;
+                // Run success handler here to guarantee it run before the child's useEffect
                 lifecycleHandlers?.success?.(success);
                 setResult(() => ({
                     type: 'success',
@@ -100,9 +101,6 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
                 retryCount: failureRetryCountRef.current
             });
         }
-        // else if (result.type === 'success') {
-        //     lifecycleHandlers?.success?.(result.value)
-        // }
     }, [result, ...dependencies]);
     return [result, setTrigger];
 };
