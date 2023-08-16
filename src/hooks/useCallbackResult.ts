@@ -44,7 +44,9 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     const [result, setResult] = useImmer<Result<T>>({
         type: 'pending'
     })
-    const [trigger, setTrigger] = useTrigger(lifecycleHandlers?.cleanup)
+    const [trigger, setTrigger] = useTrigger(() => {
+        lifecycleHandlers?.cleanup?.((result as Result<T> & { type: 'success' }).value)
+    })
     // Set the retry count ref
     const failureRetryCountRef = useRef(0)
     const failureErrorLogRef = useRef<Array<Error>>([])

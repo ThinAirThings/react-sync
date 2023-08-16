@@ -24,7 +24,9 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
     const [result, setResult] = useImmer.useImmer({
         type: 'pending'
     });
-    const [trigger, setTrigger] = useTrigger(lifecycleHandlers?.cleanup);
+    const [trigger, setTrigger] = useTrigger(() => {
+        lifecycleHandlers?.cleanup?.(result.value);
+    });
     // Set the retry count ref
     const failureRetryCountRef = React.useRef(0);
     const failureErrorLogRef = React.useRef([]);
