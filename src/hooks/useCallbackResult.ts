@@ -15,7 +15,6 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCal
             ? { type: 'trigger', state: 'triggered'} 
             : { type: 'trigger', state: 'done'}
     )
-    const triggerValueRef = useRef(initialTriggerState)
     return [
         trigger,
         async (triggerState: 'triggered' | 'done') => {
@@ -33,7 +32,6 @@ export const useTrigger = (initialTriggerState: 'triggered' | 'done', cleanupCal
                 }))
             }
         },
-        // triggerValueRef.current
     ] as const
 }
 
@@ -64,6 +62,16 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
     // Run the callback
     useEffect(() => {
         (async () => {
+            if (dependencies
+                .filter(dep => dep.type === 'trigger')
+                .map((dep: any) => dep.state === 'triggered')
+                .some(Boolean)
+            ) {
+                setResult((draft) => {
+                    draft.type = 'pending'
+                })
+                return
+            }
             if (!dependencies
                     .filter(dep => dep.type !== "trigger")
                     .map(dependencyResult => dependencyResult.type === 'success')

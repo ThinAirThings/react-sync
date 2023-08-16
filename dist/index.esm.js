@@ -5,7 +5,6 @@ const useTrigger = (initialTriggerState, cleanupCallback) => {
     const [trigger, setTrigger] = useState(initialTriggerState === 'triggered'
         ? { type: 'trigger', state: 'triggered' }
         : { type: 'trigger', state: 'done' });
-    useRef(initialTriggerState);
     return [
         trigger,
         async (triggerState) => {
@@ -24,7 +23,6 @@ const useTrigger = (initialTriggerState, cleanupCallback) => {
                 }));
             }
         },
-        // triggerValueRef.current
     ];
 };
 const useCallbackResult = (callback, dependencies, resultHandlers) => {
@@ -39,6 +37,15 @@ const useCallbackResult = (callback, dependencies, resultHandlers) => {
     // Run the callback
     useEffect(() => {
         (async () => {
+            if (dependencies
+                .filter(dep => dep.type === 'trigger')
+                .map((dep) => dep.state === 'triggered')
+                .some(Boolean)) {
+                setResult((draft) => {
+                    draft.type = 'pending';
+                });
+                return;
+            }
             if (!dependencies
                 .filter(dep => dep.type !== "trigger")
                 .map(dependencyResult => dependencyResult.type === 'success')
