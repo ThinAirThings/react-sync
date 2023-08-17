@@ -67,61 +67,80 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                 })
                 return
             }
-            if (result.type !== 'pending') return
-            const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
-            try {
-                const success = failureRetryCallbackRef.current 
-                    ? await failureRetryCallbackRef.current(depValues)
-                    : await callback(depValues)
-
-                // Clear failure references
-                failureRetryCountRef.current = 0
-                failureErrorLogRef.current.length = 0
-                failureRetryCallbackRef.current = null
-                // Run success handler here to guarantee it run before the child's useEffect
-                lifecycleHandlers?.success?.(success)
-                setResult(() => ({
-                    type: 'success',
-                    value: success
-                }))
-            } catch (_error) {
-                const error = _error as Error
-                setResult(() => ({
-                    type: 'failure',
-                    value: error
-                }))
+            if (result.type === 'pending') {
+                lifecycleHandlers?.pending?.({
+                    errorLog: failureErrorLogRef.current,
+                    retryCount: failureRetryCountRef.current
+                })
+                const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
+                try {
+                    const success = failureRetryCallbackRef.current 
+                        ? await failureRetryCallbackRef.current(depValues)
+                        : await callback(depValues)
+    
+                    // Clear failure references
+                    failureRetryCountRef.current = 0
+                    failureErrorLogRef.current.length = 0
+                    failureRetryCallbackRef.current = null
+                    // Run success handler here to guarantee it run before the child's useEffect
+                    lifecycleHandlers?.success?.(success)
+                    setResult(() => ({
+                        type: 'success',
+                        value: success
+                    }))
+                } catch (_error) {
+                    const error = _error as Error
+                    failureRetryCountRef.current++
+                    failureErrorLogRef.current.push(error)
+                    const runRetry = (newCallback?: typeof callback) => {
+                        if (newCallback) failureRetryCallbackRef.current = newCallback
+                        else failureRetryCallbackRef.current = null
+                        setResult(() => ({
+                            type: 'pending'
+                        }))
+                    }
+                    lifecycleHandlers?.failure?.(error, {
+                        runRetry,
+                        errorLog: failureErrorLogRef.current, 
+                        retryCount: failureRetryCountRef.current
+                    })
+                    setResult(() => ({
+                        type: 'failure',
+                        value: error
+                    }))
+                }
             }
         })()
     }, [trigger, result, ...dependencies])   // Add result here
-    // Run the result handlers
-    useEffect(() => {
-        if (!dependencies
-            .map(dependencyResult => dependencyResult.type === 'success')
-            .every(Boolean)
-        ) return 
-        // Handle Errors
-        if (result.type === 'failure') {
-            failureRetryCountRef.current++
-            failureErrorLogRef.current.push(result.error)
-            const runRetry = (newCallback?: typeof callback) => {
-                if (newCallback) failureRetryCallbackRef.current = newCallback
-                else failureRetryCallbackRef.current = null
-                setResult(() => ({
-                    type: 'pending'
-                }))
-            }
-            lifecycleHandlers?.failure?.(result.error, {
-                runRetry,
-                errorLog: failureErrorLogRef.current, 
-                retryCount: failureRetryCountRef.current
-            })
-        } else if (result.type === 'pending') {
-            lifecycleHandlers?.pending?.({
-                errorLog: failureErrorLogRef.current,
-                retryCount: failureRetryCountRef.current
-            })
-        } 
-    }, [result, ...dependencies])
+    // // Run the result handlers
+    // useEffect(() => {
+    //     if (!dependencies
+    //         .map(dependencyResult => dependencyResult.type === 'success')
+    //         .every(Boolean)
+    //     ) return 
+    //     // Handle Errors
+    //     if (result.type === 'failure') {
+    //         failureRetryCountRef.current++
+    //         failureErrorLogRef.current.push(result.error)
+    //         const runRetry = (newCallback?: typeof callback) => {
+    //             if (newCallback) failureRetryCallbackRef.current = newCallback
+    //             else failureRetryCallbackRef.current = null
+    //             setResult(() => ({
+    //                 type: 'pending'
+    //             }))
+    //         }
+    //         lifecycleHandlers?.failure?.(result.error, {
+    //             runRetry,
+    //             errorLog: failureErrorLogRef.current, 
+    //             retryCount: failureRetryCountRef.current
+    //         })
+    //     } else if (result.type === 'pending') {
+    //         lifecycleHandlers?.pending?.({
+    //             errorLog: failureErrorLogRef.current,
+    //             retryCount: failureRetryCountRef.current
+    //         })
+    //     } 
+    // }, [result, ...dependencies])
     return [
         result, 
         () => setTrigger('triggered')
