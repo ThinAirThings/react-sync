@@ -46,11 +46,8 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
                 return;
             }
             if (result.type === 'pending') {
-                lifecycleHandlers?.pending?.({
-                    errorLog: failureErrorLogRef.current,
-                    retryCount: failureRetryCountRef.current
-                });
                 const depValues = dependencies.map(dep => dep.value);
+                lifecycleHandlers?.pending?.(depValues);
                 try {
                     const success = failureRetryCallbackRef.current
                         ? await failureRetryCallbackRef.current(depValues)

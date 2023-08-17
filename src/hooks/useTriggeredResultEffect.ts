@@ -27,10 +27,7 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
     callback: (dependencyValues: DependencyValues<Deps>) => Promise<T>,
     dependencies: Deps,
     lifecycleHandlers?: {
-        pending?: (failureLog: {
-            retryCount: number,
-            errorLog: Array<Error>
-        }) => void,
+        pending?: (dependencyValues: DependencyValues<Deps>) => void,
         success?: (value: T, dependencyValues: DependencyValues<Deps>) => void
         cleanup?: (value: T) => Promise<void>|void
         failure?: {
@@ -76,11 +73,8 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                 return
             }
             if (result.type === 'pending') {
-                lifecycleHandlers?.pending?.({
-                    errorLog: failureErrorLogRef.current,
-                    retryCount: failureRetryCountRef.current
-                })
                 const depValues = dependencies.map(dep => (dep as Result<any>  & { type: 'success' }).value) as { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never };
+                lifecycleHandlers?.pending?.(depValues)
                 try {
                     const success = failureRetryCallbackRef.current 
                         ? await failureRetryCallbackRef.current(depValues)
