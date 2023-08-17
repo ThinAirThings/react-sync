@@ -42,7 +42,7 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                 errorLog: Array<Error>
             }) => void
             retriesExceeded?: (failureLog: {
-                retryCount: number,
+                maxRetryCount: number,
                 errorLog: Array<Error>
             }) => void
         }
