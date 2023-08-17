@@ -60,7 +60,7 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
                     failureErrorLogRef.current.length = 0;
                     failureRetryCallbackRef.current = null;
                     // Run success handler here to guarantee it run before the child's useEffect
-                    lifecycleHandlers?.success?.(success);
+                    lifecycleHandlers?.success?.(success, depValues);
                     setResult(() => ({
                         type: 'success',
                         value: success

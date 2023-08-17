@@ -7,17 +7,20 @@ export type Result<T> = {
     type: 'failure';
     error: Error;
 };
-export declare const useTriggeredResultEffect: <T, Deps extends Result<any>[]>(callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>, dependencies: Deps, lifecycleHandlers?: {
+type DependencyValues<Deps extends Array<Result<any>>> = {
+    [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never;
+};
+export declare const useTriggeredResultEffect: <T, Deps extends Result<any>[]>(callback: (dependencyValues: DependencyValues<Deps>) => Promise<T>, dependencies: Deps, lifecycleHandlers?: {
     pending?: (failureLog: {
         retryCount: number;
         errorLog: Array<Error>;
     }) => void;
-    success?: (value: T) => void;
+    success?: (value: T, dependencyValues: DependencyValues<Deps>) => void;
     cleanup?: (value: T) => Promise<void> | void;
     failure?: {
         maxRetryCount?: number;
         retry?: (error: Error, failureLog: {
-            runRetry: (newCallback?: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) => void;
+            runRetry: (newCallback?: (dependencyValues: DependencyValues<Deps>) => Promise<T>) => void;
             retryAttempt: number;
             maxRetryCount: number;
             errorLog: Array<Error>;
@@ -28,3 +31,4 @@ export declare const useTriggeredResultEffect: <T, Deps extends Result<any>[]>(c
         }) => void;
     };
 }) => readonly [Result<T>, () => Promise<void>];
+export {};

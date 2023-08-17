@@ -22,16 +22,16 @@ const useTrigger = (cleanupCallback?: () => Promise<void>|void) => {
         },
     ] as const
 }
-
+type DependencyValues<Deps extends Array<Result<any>>> = { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }
 export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
-    callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }) => Promise<T>,
+    callback: (dependencyValues: DependencyValues<Deps>) => Promise<T>,
     dependencies: Deps,
     lifecycleHandlers?: {
         pending?: (failureLog: {
             retryCount: number,
             errorLog: Array<Error>
         }) => void,
-        success?: (value: T) => void
+        success?: (value: T, dependencyValues: DependencyValues<Deps>) => void
         cleanup?: (value: T) => Promise<void>|void
         failure?: {
             maxRetryCount?: number
@@ -90,7 +90,7 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                     failureErrorLogRef.current.length = 0
                     failureRetryCallbackRef.current = null
                     // Run success handler here to guarantee it run before the child's useEffect
-                    lifecycleHandlers?.success?.(success)
+                    lifecycleHandlers?.success?.(success, depValues)
                     setResult(() => ({
                         type: 'success',
                         value: success
