@@ -122,5 +122,8 @@ export const useCallbackResult = <T, Deps extends Array<Result<any>>>(
             })
         } 
     }, [result, ...dependencies])
-    return [result, setTrigger] as const
+    return [
+        result, 
+        () => setTrigger('triggered')
+    ] as const
 }

@@ -106,7 +106,10 @@ const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
             });
         }
     }, [result, ...dependencies]);
-    return [result, setTrigger];
+    return [
+        result,
+        () => setTrigger('triggered')
+    ];
 };
 
 const ParentDependencyUpdaterContext = React.createContext(null);

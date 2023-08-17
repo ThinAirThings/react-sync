@@ -19,4 +19,4 @@ export declare const useCallbackResult: <T, Deps extends Result<any>[]>(callback
     }) => void;
     success?: (value: T) => void;
     cleanup?: (value: T) => Promise<void> | void;
-}) => readonly [Result<T>, (triggerState: 'triggered' | 'done') => Promise<void>];
+}) => readonly [Result<T>, () => Promise<void>];
