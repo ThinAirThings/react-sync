@@ -22,7 +22,7 @@ export declare const useTriggeredResultEffect: <T, Deps extends Result<any>[]>(c
             maxRetryCount: number;
             errorLog: Array<Error>;
         }) => void;
-        retriesExceeded?: (failureLog: {
+        final?: (failureLog: {
             maxRetryCount: number;
             errorLog: Array<Error>;
         }) => void;
