@@ -38,6 +38,7 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
             retry?: (error: Error, failureLog: {
                 runRetry: (newCallback?: typeof callback) => void,
                 retryAttempt: number,
+                maxRetryCount: number,
                 errorLog: Array<Error>
             }) => void
             retriesExceeded?: (failureLog: {
@@ -119,7 +120,8 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                     lifecycleHandlers?.failure?.retry?.(error, {
                         runRetry,
                         errorLog: failureErrorLogRef.current, 
-                        retryAttempt: failureRetryCountRef.current
+                        retryAttempt: failureRetryCountRef.current,
+                        maxRetryCount: lifecycleHandlers?.failure?.maxRetryCount ?? 0
                     })
                 }
             }

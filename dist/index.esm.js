@@ -93,7 +93,8 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
                     lifecycleHandlers?.failure?.retry?.(error, {
                         runRetry,
                         errorLog: failureErrorLogRef.current,
-                        retryAttempt: failureRetryCountRef.current
+                        retryAttempt: failureRetryCountRef.current,
+                        maxRetryCount: lifecycleHandlers?.failure?.maxRetryCount ?? 0
                     });
                 }
             }

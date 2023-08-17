@@ -19,6 +19,7 @@ export declare const useTriggeredResultEffect: <T, Deps extends Result<any>[]>(c
         retry?: (error: Error, failureLog: {
             runRetry: (newCallback?: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) => void;
             retryAttempt: number;
+            maxRetryCount: number;
             errorLog: Array<Error>;
         }) => void;
         retriesExceeded?: (failureLog: {
