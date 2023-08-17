@@ -31,13 +31,20 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
             retryCount: number,
             errorLog: Array<Error>
         }) => void,
-        failure?: (error: Error, failureLog: {
-            runRetry: (newCallback?: typeof callback) => void,
-            retryCount: number,
-            errorLog: Array<Error>
-        }) => void
         success?: (value: T) => void
         cleanup?: (value: T) => Promise<void>|void
+        failure?: {
+            maxRetryCount?: number
+            retry?: (error: Error, failureLog: {
+                runRetry: (newCallback?: typeof callback) => void,
+                retryAttempt: number,
+                errorLog: Array<Error>
+            }) => void
+            retriesExceeded?: (failureLog: {
+                retryCount: number,
+                errorLog: Array<Error>
+            }) => void
+        }
     }, 
 ) => {
     // Set result state
@@ -76,8 +83,7 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                 try {
                     const success = failureRetryCallbackRef.current 
                         ? await failureRetryCallbackRef.current(depValues)
-                        : await callback(depValues)
-    
+                        : await callback(depValues) 
                     // Clear failure references
                     failureRetryCountRef.current = 0
                     failureErrorLogRef.current.length = 0
@@ -103,44 +109,22 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                         type: 'failure',
                         value: error
                     }))
-                    lifecycleHandlers?.failure?.(error, {
+                    if (failureRetryCountRef.current > (lifecycleHandlers?.failure?.maxRetryCount ?? 0)) {
+                        lifecycleHandlers?.failure?.retriesExceeded?.({
+                            errorLog: failureErrorLogRef.current,
+                            retryCount: failureRetryCountRef.current
+                        })
+                        return
+                    }
+                    lifecycleHandlers?.failure?.retry?.(error, {
                         runRetry,
                         errorLog: failureErrorLogRef.current, 
-                        retryCount: failureRetryCountRef.current
+                        retryAttempt: failureRetryCountRef.current
                     })
                 }
             }
         })()
     }, [trigger, result, ...dependencies])   // Add result here
-    // // Run the result handlers
-    // useEffect(() => {
-    //     if (!dependencies
-    //         .map(dependencyResult => dependencyResult.type === 'success')
-    //         .every(Boolean)
-    //     ) return 
-    //     // Handle Errors
-    //     if (result.type === 'failure') {
-    //         failureRetryCountRef.current++
-    //         failureErrorLogRef.current.push(result.error)
-    //         const runRetry = (newCallback?: typeof callback) => {
-    //             if (newCallback) failureRetryCallbackRef.current = newCallback
-    //             else failureRetryCallbackRef.current = null
-    //             setResult(() => ({
-    //                 type: 'pending'
-    //             }))
-    //         }
-    //         lifecycleHandlers?.failure?.(result.error, {
-    //             runRetry,
-    //             errorLog: failureErrorLogRef.current, 
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } else if (result.type === 'pending') {
-    //         lifecycleHandlers?.pending?.({
-    //             errorLog: failureErrorLogRef.current,
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } 
-    // }, [result, ...dependencies])
     return [
         result, 
         () => setTrigger('triggered')

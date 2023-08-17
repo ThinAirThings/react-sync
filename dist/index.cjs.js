@@ -85,44 +85,22 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
                         type: 'failure',
                         value: error
                     }));
-                    lifecycleHandlers?.failure?.(error, {
+                    if (failureRetryCountRef.current > (lifecycleHandlers?.failure?.maxRetryCount ?? 0)) {
+                        lifecycleHandlers?.failure?.retriesExceeded?.({
+                            errorLog: failureErrorLogRef.current,
+                            retryCount: failureRetryCountRef.current
+                        });
+                        return;
+                    }
+                    lifecycleHandlers?.failure?.retry?.(error, {
                         runRetry,
                         errorLog: failureErrorLogRef.current,
-                        retryCount: failureRetryCountRef.current
+                        retryAttempt: failureRetryCountRef.current
                     });
                 }
             }
         })();
     }, [trigger, result, ...dependencies]); // Add result here
-    // // Run the result handlers
-    // useEffect(() => {
-    //     if (!dependencies
-    //         .map(dependencyResult => dependencyResult.type === 'success')
-    //         .every(Boolean)
-    //     ) return 
-    //     // Handle Errors
-    //     if (result.type === 'failure') {
-    //         failureRetryCountRef.current++
-    //         failureErrorLogRef.current.push(result.error)
-    //         const runRetry = (newCallback?: typeof callback) => {
-    //             if (newCallback) failureRetryCallbackRef.current = newCallback
-    //             else failureRetryCallbackRef.current = null
-    //             setResult(() => ({
-    //                 type: 'pending'
-    //             }))
-    //         }
-    //         lifecycleHandlers?.failure?.(result.error, {
-    //             runRetry,
-    //             errorLog: failureErrorLogRef.current, 
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } else if (result.type === 'pending') {
-    //         lifecycleHandlers?.pending?.({
-    //             errorLog: failureErrorLogRef.current,
-    //             retryCount: failureRetryCountRef.current
-    //         })
-    //     } 
-    // }, [result, ...dependencies])
     return [
         result,
         () => setTrigger('triggered')

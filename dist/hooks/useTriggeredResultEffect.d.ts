@@ -12,11 +12,18 @@ export declare const useTriggeredResultEffect: <T, Deps extends Result<any>[]>(c
         retryCount: number;
         errorLog: Array<Error>;
     }) => void;
-    failure?: (error: Error, failureLog: {
-        runRetry: (newCallback?: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) => void;
-        retryCount: number;
-        errorLog: Array<Error>;
-    }) => void;
     success?: (value: T) => void;
     cleanup?: (value: T) => Promise<void> | void;
+    failure?: {
+        maxRetryCount?: number;
+        retry?: (error: Error, failureLog: {
+            runRetry: (newCallback?: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never; }) => Promise<T>) => void;
+            retryAttempt: number;
+            errorLog: Array<Error>;
+        }) => void;
+        retriesExceeded?: (failureLog: {
+            retryCount: number;
+            errorLog: Array<Error>;
+        }) => void;
+    };
 }) => readonly [Result<T>, () => Promise<void>];
