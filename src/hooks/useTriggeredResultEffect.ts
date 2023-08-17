@@ -24,7 +24,7 @@ const useTrigger = (cleanupCallback?: () => Promise<void>|void) => {
 }
 
 export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
-    callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : void }) => Promise<T>,
+    callback: (depResults: { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }) => Promise<T>,
     dependencies: Deps,
     lifecycleHandlers?: {
         pending?: (failureLog: {
