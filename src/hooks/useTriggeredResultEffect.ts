@@ -113,7 +113,7 @@ export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
                     if (failureRetryCountRef.current > (lifecycleHandlers?.failure?.maxRetryCount ?? 0)) {
                         lifecycleHandlers?.failure?.retriesExceeded?.({
                             errorLog: failureErrorLogRef.current,
-                            retryCount: failureRetryCountRef.current
+                            maxRetryCount: failureRetryCountRef.current
                         })
                         return
                     }

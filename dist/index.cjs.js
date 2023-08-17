@@ -88,7 +88,7 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
                     if (failureRetryCountRef.current > (lifecycleHandlers?.failure?.maxRetryCount ?? 0)) {
                         lifecycleHandlers?.failure?.retriesExceeded?.({
                             errorLog: failureErrorLogRef.current,
-                            retryCount: failureRetryCountRef.current
+                            maxRetryCount: failureRetryCountRef.current
                         });
                         return;
                     }
