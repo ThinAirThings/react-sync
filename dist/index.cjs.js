@@ -81,15 +81,15 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
                             type: 'pending'
                         }));
                     };
+                    setResult(() => ({
+                        type: 'failure',
+                        value: error
+                    }));
                     lifecycleHandlers?.failure?.(error, {
                         runRetry,
                         errorLog: failureErrorLogRef.current,
                         retryCount: failureRetryCountRef.current
                     });
-                    setResult(() => ({
-                        type: 'failure',
-                        value: error
-                    }));
                 }
             }
         })();
