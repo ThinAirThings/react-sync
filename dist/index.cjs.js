@@ -19,7 +19,7 @@ const useTrigger = (cleanupCallback) => {
         },
     ];
 };
-const useCallbackResult = (callback, dependencies, lifecycleHandlers) => {
+const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => {
     // Set result state
     const [result, setResult] = useImmer.useImmer({
         type: 'pending'
@@ -156,7 +156,7 @@ const useDependencyResolver = ({ callback, cleanup }) => {
 };
 
 exports.DependencyLayer = DependencyLayer;
-exports.useCallbackResult = useCallbackResult;
 exports.useDependencyResolver = useDependencyResolver;
 exports.useDependencyResolverContext = useDependencyResolverContext;
+exports.useTriggeredResultEffect = useTriggeredResultEffect;
 exports.useUpdateParentDependencyFromChildMap = useUpdateParentDependencyFromChildMap;
