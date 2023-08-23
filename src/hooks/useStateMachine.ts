@@ -23,7 +23,7 @@ const useTrigger = (cleanupCallback?: () => Promise<void>|void) => {
     ] as const
 }
 type DependencyValues<Deps extends Array<Result<any>>> = { [K in keyof Deps]: Deps[K] extends Result<infer U> ? U : never }
-export const useTriggeredResultEffect = <T, Deps extends Array<Result<any>>>(
+export const useStateMachine= <T, Deps extends Array<Result<any>>>(
     callback: (dependencyValues: DependencyValues<Deps>) => Promise<T>,
     dependencies: Deps,
     lifecycleHandlers?: {
