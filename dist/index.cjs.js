@@ -1,10 +1,10 @@
 'use strict';
 
-var React = require('react');
+var react = require('react');
 var useImmer = require('use-immer');
 
 const useTrigger = (cleanupCallback) => {
-    const [trigger, setTrigger] = React.useState('triggered');
+    const [trigger, setTrigger] = react.useState('triggered');
     return [
         trigger,
         async (triggerState) => {
@@ -19,7 +19,7 @@ const useTrigger = (cleanupCallback) => {
         },
     ];
 };
-const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => {
+const useStateMachine = (callback, dependencies, lifecycleHandlers) => {
     // Set result state
     const [result, setResult] = useImmer.useImmer({
         type: 'pending'
@@ -28,11 +28,11 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
         lifecycleHandlers?.cleanup?.(result.value);
     });
     // Set the retry count ref
-    const failureRetryCountRef = React.useRef(0);
-    const failureErrorLogRef = React.useRef([]);
-    const failureRetryCallbackRef = React.useRef(null);
+    const failureRetryCountRef = react.useRef(0);
+    const failureErrorLogRef = react.useRef([]);
+    const failureRetryCallbackRef = react.useRef(null);
     // Run the callback
-    React.useEffect(() => {
+    react.useEffect(() => {
         (async () => {
             if (trigger === 'triggered') {
                 setResult((draft) => {
@@ -105,51 +105,4 @@ const useTriggeredResultEffect = (callback, dependencies, lifecycleHandlers) => 
     ];
 };
 
-const ParentDependencyUpdaterContext = React.createContext(null);
-const useUpdateParentDependencyFromChildMap = () => React.useContext(ParentDependencyUpdaterContext);
-const DependencyResolverContext = React.createContext(null);
-const useDependencyResolverContext = () => React.useContext(DependencyResolverContext);
-// Dependency Control Layer
-const DependencyLayer = ({ dependencyTable, dependencyPropsTable, children, }) => {
-    const [dependencyResolutionMap, updateDependencyResolutionMap] = useImmer.useImmer(new Map(Object.entries(dependencyTable).map(([key]) => [
-        key, false
-    ])));
-    return (React.createElement(React.Fragment, null,
-        Object.entries(dependencyTable).map(([key, Component]) => {
-            const forwardProps = dependencyPropsTable?.[key];
-            return React.createElement(DependencyResolverContext.Provider, { key: key, value: [
-                    dependencyResolutionMap.get(key),
-                    (resolved) => updateDependencyResolutionMap(draft => {
-                        draft.set(key, resolved);
-                    })
-                ] },
-                React.createElement(Component, { ...forwardProps ?? {} }));
-        }),
-        React.createElement(ParentDependencyUpdaterContext.Provider, { value: updateDependencyResolutionMap }, [...dependencyResolutionMap].every(([_, resolved]) => resolved)
-            && children)));
-};
-
-const useDependencyResolver = ({ callback, cleanup }) => {
-    const [dependencyResolved, setDependencyResolved] = useDependencyResolverContext();
-    const [cleaningUp, setCleaningUp] = React.useState(false);
-    const cleaningUpRef = React.useRef(cleaningUp);
-    cleaningUpRef.current = cleaningUp;
-    React.useEffect(() => {
-        if (!dependencyResolved && !cleaningUp && !cleaningUpRef.current) {
-            callback(setDependencyResolved);
-        }
-        return () => {
-            if (!dependencyResolved || cleaningUp)
-                return; // Don't run when flipped from false to true
-            setCleaningUp(true);
-            cleaningUpRef.current = true;
-            cleanup?.(setCleaningUp);
-        };
-    }, [dependencyResolved, cleaningUp]);
-};
-
-exports.DependencyLayer = DependencyLayer;
-exports.useDependencyResolver = useDependencyResolver;
-exports.useDependencyResolverContext = useDependencyResolverContext;
-exports.useTriggeredResultEffect = useTriggeredResultEffect;
-exports.useUpdateParentDependencyFromChildMap = useUpdateParentDependencyFromChildMap;
+exports.useStateMachine = useStateMachine;
