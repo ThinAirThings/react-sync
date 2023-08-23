@@ -1,7 +1,7 @@
 {
     "name": "@thinairthings/react-sync",
     "author": "Dan Lannan",
-    "version": "1.0.53",
+    "version": "1.0.54",
     "description": "React Synchronization Library",
     "module": "dist/index.esm.js",
     "types": "dist/index.d.ts",
